@@ -18,6 +18,9 @@ export default {
 			}
 		},
 		extend: {
+			backgroundImage: {
+				'hero-gradient': 'var(--hero-bg)',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -50,8 +53,12 @@ export default {
 				},
 				card: {
 					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
+					foreground: 'hsl(var(--card-foreground))',
+					hover: 'hsl(var(--card-hover))'
 				},
+				'warm-orange': 'hsl(var(--warm-orange))',
+				'trust-blue': 'hsl(var(--trust-blue))',
+				'hope-green': 'hsl(var(--hope-green))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
