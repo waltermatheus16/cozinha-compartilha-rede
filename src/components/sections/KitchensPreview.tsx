@@ -104,7 +104,11 @@ export const KitchensPreview = () => {
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                <Button 
+                  variant="outline" 
+                  className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                  onClick={() => window.location.href = `/cozinha/${kitchen.id}`}
+                >
                   Ver Perfil
                 </Button>
               </div>

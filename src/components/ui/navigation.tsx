@@ -35,7 +35,11 @@ export const Navigation = () => {
 
           {/* Login Button & Mobile Menu */}
           <div className="flex items-center space-x-4">
-            <Button variant="outline" className="hidden sm:flex">
+            <Button 
+              variant="outline" 
+              className="hidden sm:flex"
+              onClick={() => window.location.href = "/login"}
+            >
               Entrar
             </Button>
             <Button className="hidden sm:flex">
@@ -71,7 +75,11 @@ export const Navigation = () => {
                 Contato
               </a>
               <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.href = "/login"}
+                >
                   Entrar
                 </Button>
                 <Button size="sm">
