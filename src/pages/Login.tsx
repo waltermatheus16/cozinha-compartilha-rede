@@ -96,16 +96,6 @@ const Login = () => {
               </Button>
             </form>
 
-            <Separator className="my-6" />
-
-            <div className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Ainda não tem uma cozinha cadastrada?
-              </p>
-              <Button variant="outline" className="w-full">
-                Cadastrar Nova Cozinha
-              </Button>
-            </div>
           </Card>
 
           {/* Informações de Suporte */}

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Heart, Menu, X } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export const Navigation = () => {
@@ -10,12 +11,16 @@ export const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <Heart className="w-5 h-5 text-primary-foreground" />
+          <button 
+            onClick={() => window.location.href = "/"}
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            <Logo size="sm" />
+            <div className="flex flex-col">
+              <span className="text-lg font-bold text-foreground">COMSEA</span>
+              <span className="text-xs text-muted-foreground">Cozinhas Solidárias</span>
             </div>
-            <span className="text-xl font-bold text-foreground">Cozinhas Solidárias</span>
-          </div>
+          </button>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
@@ -33,20 +38,8 @@ export const Navigation = () => {
             </a>
           </div>
 
-          {/* Login Button & Mobile Menu */}
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="outline" 
-              className="hidden sm:flex"
-              onClick={() => window.location.href = "/login"}
-            >
-              Entrar
-            </Button>
-            <Button className="hidden sm:flex">
-              Cadastrar Cozinha
-            </Button>
-            
-            {/* Mobile menu button */}
+          {/* Mobile menu button */}
+          <div className="flex items-center">
             <Button
               variant="ghost"
               size="icon"
@@ -74,18 +67,6 @@ export const Navigation = () => {
               <a href="#" className="text-foreground hover:text-primary transition-colors">
                 Contato
               </a>
-              <div className="flex flex-col space-y-2 pt-4">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.location.href = "/login"}
-                >
-                  Entrar
-                </Button>
-                <Button size="sm">
-                  Cadastrar Cozinha
-                </Button>
-              </div>
             </div>
           </div>
         )}

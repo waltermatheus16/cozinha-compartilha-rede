@@ -7,7 +7,7 @@ export const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center pt-16">
       {/* Background with overlay */}
-      <div className="absolute inset-0 bg-hero-gradient opacity-90"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/80 to-secondary/60 opacity-95"></div>
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
         style={{ backgroundImage: `url(${heroImage})` }}
@@ -19,8 +19,8 @@ export const HeroSection = () => {
           <div className="text-white text-center lg:text-left">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-4 lg:mb-6">
               Alimentando
-              <span className="block text-secondary"> Esperança</span>
-              <span className="block text-accent"> Construindo Comunidade</span>
+              <span className="block text-white"> Esperança</span>
+              <span className="block text-secondary"> Construindo Comunidade</span>
             </h1>
             
             <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-6 lg:mb-8 leading-relaxed px-2 sm:px-0">
@@ -29,10 +29,20 @@ export const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-8 lg:mb-12 px-2 sm:px-0">
-              <Button size="lg" variant="secondary" className="text-base lg:text-lg px-6 lg:px-8 py-3 lg:py-4">
+              <Button 
+                size="lg" 
+                variant="secondary" 
+                className="text-base lg:text-lg px-6 lg:px-8 py-3 lg:py-4 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                onClick={() => {
+                  const element = document.getElementById('cozinhas');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              >
                 Conhecer Cozinhas
               </Button>
-              <Button size="lg" variant="outline" className="text-base lg:text-lg px-6 lg:px-8 py-3 lg:py-4 border-white text-white hover:bg-white hover:text-primary">
+              <Button size="lg" variant="outline" className="text-base lg:text-lg px-6 lg:px-8 py-3 lg:py-4 border-white text-white hover:bg-white hover:text-primary bg-white/10 backdrop-blur-sm">
                 Nossa História
               </Button>
             </div>
@@ -40,11 +50,11 @@ export const HeroSection = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6 px-2 sm:px-0">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-secondary mb-1 lg:mb-2">22</div>
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 lg:mb-2">22</div>
                 <div className="text-xs sm:text-sm text-white/80">Cozinhas Ativas</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-accent mb-1 lg:mb-2">500+</div>
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-secondary mb-1 lg:mb-2">500+</div>
                 <div className="text-xs sm:text-sm text-white/80">Refeições/Dia</div>
               </div>
               <div className="text-center">
@@ -90,9 +100,9 @@ export const HeroSection = () => {
                   <MapPin className="w-5 h-5 lg:w-6 lg:h-6 text-secondary-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-lg lg:text-xl font-semibold mb-1 lg:mb-2">Rede Territorial</h3>
+                  <h3 className="text-lg lg:text-xl font-semibold mb-1 lg:mb-2">Rede Local</h3>
                   <p className="text-sm lg:text-base text-muted-foreground">
-                    Presente em diferentes territórios, levando proximidade e cuidado a quem precisa.
+                    Presente em diferentes bairros de Santana do Livramento, levando proximidade e cuidado a quem precisa.
                   </p>
                 </div>
               </div>

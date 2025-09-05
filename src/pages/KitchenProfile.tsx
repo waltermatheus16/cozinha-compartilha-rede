@@ -12,18 +12,233 @@ const KitchenProfile = () => {
   const [newPost, setNewPost] = useState("");
   const [postType, setPostType] = useState<"info" | "need" | "location">("info");
 
-  // Mock data - em produção viria do Supabase
-  const kitchen = {
-    id: 1,
-    name: "Cozinha Esperança",
-    location: "Centro - São Paulo",
-    description: "Primeira cozinha da rede, atendendo a população em situação de rua no centro da cidade há mais de 3 anos.",
-    volunteers: 15,
-    dailyMeals: 80,
-    totalMeals: 87600,
-    followers: 1200,
-    contact: "(11) 99999-9999"
+  // Dados das cozinhas - em produção viria do Supabase
+  const kitchensData = {
+    1: {
+      id: 1,
+      name: "APAE",
+      location: "Santana do Livramento, RS",
+      description: "Associação de Pais e Amigos dos Excepcionais, promovendo inclusão e alimentação digna para pessoas com deficiência e suas famílias.",
+      volunteers: 12,
+      dailyMeals: 45,
+      totalMeals: 32850,
+      contact: "(55) 3242-1234"
+    },
+    2: {
+      id: 2,
+      name: "Associação de Moradores Caixa D' do Wilson",
+      location: "Santana do Livramento, RS",
+      description: "Organização comunitária que fortalece vínculos através da alimentação solidária, promovendo o desenvolvimento local.",
+      volunteers: 8,
+      dailyMeals: 35,
+      totalMeals: 25550,
+      contact: "(55) 3242-2345"
+    },
+    3: {
+      id: 3,
+      name: "Centro Beneficente Maria Abgahair",
+      location: "Santana do Livramento, RS",
+      description: "Centro de assistência social dedicado ao cuidado com famílias em situação de vulnerabilidade social.",
+      volunteers: 15,
+      dailyMeals: 60,
+      totalMeals: 43800,
+      contact: "(55) 3242-3456"
+    },
+    4: {
+      id: 4,
+      name: "Cidade de Meninos",
+      location: "Santana do Livramento, RS",
+      description: "Projeto social focado no desenvolvimento integral de crianças e adolescentes em situação de risco social.",
+      volunteers: 20,
+      dailyMeals: 80,
+      totalMeals: 58400,
+      contact: "(55) 3242-4567"
+    },
+    5: {
+      id: 5,
+      name: "Cozinha Prato Cheio (Becão)",
+      location: "Santana do Livramento, RS",
+      description: "Cozinha comunitária que oferece refeições nutritivas e acolhimento para famílias da comunidade local.",
+      volunteers: 10,
+      dailyMeals: 50,
+      totalMeals: 36500,
+      contact: "(55) 3242-5678"
+    },
+    6: {
+      id: 6,
+      name: "Cozinha Vila Nova",
+      location: "Santana do Livramento, RS",
+      description: "Iniciativa local que fortalece a comunidade através da solidariedade alimentar e do trabalho voluntário.",
+      volunteers: 14,
+      dailyMeals: 55,
+      totalMeals: 40150,
+      contact: "(55) 3242-6789"
+    },
+    7: {
+      id: 7,
+      name: "Cozinha da Ironda Simon Bolivar",
+      location: "Santana do Livramento, RS",
+      description: "Cozinha comunitária que atende famílias do bairro Simon Bolivar com refeições nutritivas e acolhimento.",
+      volunteers: 9,
+      dailyMeals: 40,
+      totalMeals: 29200,
+      contact: "(55) 3242-7890"
+    },
+    8: {
+      id: 8,
+      name: "Cozinha Pai Marcos",
+      location: "Santana do Livramento, RS",
+      description: "Iniciativa religiosa que combina espiritualidade e solidariedade através da alimentação comunitária.",
+      volunteers: 11,
+      dailyMeals: 48,
+      totalMeals: 35040,
+      contact: "(55) 3242-8901"
+    },
+    9: {
+      id: 9,
+      name: "Conferência São Vicente de Paula",
+      location: "Santana do Livramento, RS",
+      description: "Organização católica dedicada ao atendimento de famílias em situação de vulnerabilidade social.",
+      volunteers: 13,
+      dailyMeals: 52,
+      totalMeals: 37960,
+      contact: "(55) 3242-9012"
+    },
+    10: {
+      id: 10,
+      name: "Clube de Mães Nossa Senhora",
+      location: "Santana do Livramento, RS",
+      description: "Grupo de mães que se unem para oferecer apoio alimentar e fortalecimento comunitário.",
+      volunteers: 7,
+      dailyMeals: 30,
+      totalMeals: 21900,
+      contact: "(55) 3242-0123"
+    },
+    11: {
+      id: 11,
+      name: "Creche Santa Elvira",
+      location: "Santana do Livramento, RS",
+      description: "Creche comunitária que oferece educação infantil e alimentação adequada para crianças carentes.",
+      volunteers: 16,
+      dailyMeals: 65,
+      totalMeals: 47425,
+      contact: "(55) 3242-1234"
+    },
+    12: {
+      id: 12,
+      name: "Creche Pai Sete",
+      location: "Santana do Livramento, RS",
+      description: "Centro de educação infantil que promove desenvolvimento integral através de educação e alimentação.",
+      volunteers: 18,
+      dailyMeals: 70,
+      totalMeals: 51100,
+      contact: "(55) 3242-2345"
+    },
+    13: {
+      id: 13,
+      name: "CURA (Centro Umbandista de Rituais Afros)",
+      location: "Santana do Livramento, RS",
+      description: "Centro religioso que combina tradições afro-brasileiras com ações sociais de alimentação comunitária.",
+      volunteers: 6,
+      dailyMeals: 25,
+      totalMeals: 18250,
+      contact: "(55) 3242-3456"
+    },
+    14: {
+      id: 14,
+      name: "Movimento de Meninos",
+      location: "Santana do Livramento, RS",
+      description: "Organização que trabalha com crianças e adolescentes em situação de rua, oferecendo acolhimento e alimentação.",
+      volunteers: 22,
+      dailyMeals: 85,
+      totalMeals: 62025,
+      contact: "(55) 3242-4567"
+    },
+    15: {
+      id: 15,
+      name: "Lar de Meninas",
+      location: "Santana do Livramento, RS",
+      description: "Instituição que acolhe meninas em situação de vulnerabilidade, oferecendo proteção e alimentação adequada.",
+      volunteers: 19,
+      dailyMeals: 75,
+      totalMeals: 54750,
+      contact: "(55) 3242-5678"
+    },
+    16: {
+      id: 16,
+      name: "Projeto Rosas de Ouro",
+      location: "Santana do Livramento, RS",
+      description: "Projeto social que trabalha com idosos, oferecendo atividades recreativas e alimentação balanceada.",
+      volunteers: 5,
+      dailyMeals: 20,
+      totalMeals: 14600,
+      contact: "(55) 3242-6789"
+    },
+    17: {
+      id: 17,
+      name: "Projeto Tche",
+      location: "Santana do Livramento, RS",
+      description: "Iniciativa cultural e social que promove tradições gaúchas através de atividades comunitárias e alimentação.",
+      volunteers: 8,
+      dailyMeals: 35,
+      totalMeals: 25550,
+      contact: "(55) 3242-7890"
+    },
+    18: {
+      id: 18,
+      name: "Projeto Alegria e Canção",
+      location: "Santana do Livramento, RS",
+      description: "Projeto que une música e solidariedade, oferecendo atividades artísticas e alimentação para a comunidade.",
+      volunteers: 12,
+      dailyMeals: 45,
+      totalMeals: 32850,
+      contact: "(55) 3242-8901"
+    },
+    19: {
+      id: 19,
+      name: "SIAN",
+      location: "Santana do Livramento, RS",
+      description: "Sistema de Informação e Atenção à Nutrição que promove segurança alimentar e nutricional na comunidade.",
+      volunteers: 10,
+      dailyMeals: 42,
+      totalMeals: 30660,
+      contact: "(55) 3242-9012"
+    },
+    20: {
+      id: 20,
+      name: "Cozinha Comunitária Centro",
+      location: "Santana do Livramento, RS",
+      description: "Cozinha central que atende a região central da cidade com refeições nutritivas e acolhimento.",
+      volunteers: 14,
+      dailyMeals: 58,
+      totalMeals: 42340,
+      contact: "(55) 3242-0123"
+    },
+    21: {
+      id: 21,
+      name: "Cozinha Solidária Norte",
+      location: "Santana do Livramento, RS",
+      description: "Iniciativa que atende a zona norte da cidade, promovendo segurança alimentar e fortalecimento comunitário.",
+      volunteers: 9,
+      dailyMeals: 38,
+      totalMeals: 27740,
+      contact: "(55) 3242-1234"
+    },
+    22: {
+      id: 22,
+      name: "Cozinha Esperança Sul",
+      location: "Santana do Livramento, RS",
+      description: "Cozinha comunitária da zona sul que oferece esperança e alimentação digna para famílias carentes.",
+      volunteers: 17,
+      dailyMeals: 68,
+      totalMeals: 49640,
+      contact: "(55) 3242-2345"
+    }
   };
+
+  // Obter dados da cozinha baseado no ID da URL
+  const kitchenId = parseInt(window.location.pathname.split('/')[2]) || 1;
+  const kitchen = kitchensData[kitchenId] || kitchensData[1];
 
   const posts = [
     {
@@ -95,41 +310,33 @@ const KitchenProfile = () => {
 
               {/* Informações da Cozinha */}
               <div className="flex-1 text-white">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">{kitchen.name}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900">{kitchen.name}</h1>
                 <div className="flex items-center space-x-2 mb-4">
-                  <MapPin className="w-5 h-5" />
-                  <span className="text-lg">{kitchen.location}</span>
+                  <MapPin className="w-5 h-5 text-gray-700" />
+                  <span className="text-lg text-gray-800">{kitchen.location}</span>
                 </div>
-                <p className="text-white/90 mb-4 max-w-2xl">{kitchen.description}</p>
+                <p className="text-gray-700 mb-4 max-w-2xl">{kitchen.description}</p>
                 
                 {/* Stats */}
                 <div className="flex flex-wrap gap-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{kitchen.volunteers}</div>
-                    <div className="text-sm text-white/80">Voluntários</div>
+                    <div className="text-2xl font-bold text-gray-900">{kitchen.volunteers}</div>
+                    <div className="text-sm text-gray-700">Voluntários</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{kitchen.dailyMeals}</div>
-                    <div className="text-sm text-white/80">Refeições/dia</div>
+                    <div className="text-2xl font-bold text-gray-900">{kitchen.dailyMeals}</div>
+                    <div className="text-sm text-gray-700">Refeições/dia</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{kitchen.totalMeals.toLocaleString()}</div>
-                    <div className="text-sm text-white/80">Total servido</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">{kitchen.followers}</div>
-                    <div className="text-sm text-white/80">Seguidores</div>
+                    <div className="text-2xl font-bold text-gray-900">{kitchen.totalMeals.toLocaleString()}</div>
+                    <div className="text-sm text-gray-700">Total servido</div>
                   </div>
                 </div>
               </div>
 
               {/* Botões de Ação */}
               <div className="flex flex-col space-y-3">
-                <Button variant="secondary" size="lg">
-                  <Users className="w-4 h-4 mr-2" />
-                  Seguir
-                </Button>
-                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary">
+                <Button variant="default" size="lg">
                   Contato
                 </Button>
               </div>

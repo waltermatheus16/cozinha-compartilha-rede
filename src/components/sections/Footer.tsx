@@ -22,13 +22,23 @@ export const Footer = () => {
             </p>
 
             <div className="flex justify-center sm:justify-start space-x-3 lg:space-x-4">
-              <Button variant="outline" size="icon" className="hover:bg-primary hover:text-primary-foreground w-8 h-8 lg:w-10 lg:h-10">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="hover:bg-primary hover:text-primary-foreground w-8 h-8 lg:w-10 lg:h-10"
+                onClick={() => window.open('https://www.instagram.com/comsea_lvto/', '_blank')}
+              >
                 <Instagram className="w-4 h-4" />
               </Button>
               <Button variant="outline" size="icon" className="hover:bg-primary hover:text-primary-foreground w-8 h-8 lg:w-10 lg:h-10">
                 <Facebook className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon" className="hover:bg-primary hover:text-primary-foreground w-8 h-8 lg:w-10 lg:h-10">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="hover:bg-primary hover:text-primary-foreground w-8 h-8 lg:w-10 lg:h-10"
+                onClick={() => window.open('mailto:comsealivramento@gmail.com', '_blank')}
+              >
                 <Mail className="w-4 h-4" />
               </Button>
             </div>
@@ -72,7 +82,7 @@ export const Footer = () => {
             <ul className="space-y-2 lg:space-y-3 text-muted-foreground text-sm lg:text-base">
               <li className="flex items-center justify-center sm:justify-start space-x-2">
                 <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>São Paulo, SP</span>
+                <span>Rua Altrovando Santana, 104 - Santana do Livramento, RS</span>
               </li>
               <li className="flex items-center justify-center sm:justify-start space-x-2">
                 <Phone className="w-4 h-4 text-primary flex-shrink-0" />
@@ -80,19 +90,10 @@ export const Footer = () => {
               </li>
               <li className="flex items-center justify-center sm:justify-start space-x-2">
                 <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                <span className="break-all">contato@cozinhassolidarias.org</span>
+                <span className="break-all">comsealivramento@gmail.com</span>
               </li>
             </ul>
 
-            <div className="mt-4 lg:mt-6">
-              <h5 className="font-medium text-foreground mb-2 text-sm lg:text-base">Central de Emergência</h5>
-              <p className="text-xs lg:text-sm text-muted-foreground mb-2">
-                Para situações urgentes de insegurança alimentar
-              </p>
-              <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-xs lg:text-sm">
-                (11) 0000-0000
-              </Button>
-            </div>
           </div>
         </div>
 
