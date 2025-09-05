@@ -2,282 +2,85 @@ import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
-import { MapPin, Users, Clock, Heart, MessageCircle, Share2, Camera, Send, AlertCircle, Gift } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MapPin, Users, Clock, Heart, MessageCircle, Share2, Camera, Send, AlertCircle, Gift, Loader2, Trash2, Edit3, LogIn } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { getKitchenById, getPostsByKitchen, createPost, deletePost } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const KitchenProfile = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [newPost, setNewPost] = useState("");
   const [postType, setPostType] = useState<"info" | "need" | "location">("info");
+  const [kitchen, setKitchen] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Dados das cozinhas - em produção viria do Supabase
-  const kitchensData = {
-    1: {
-      id: 1,
-      name: "APAE",
-      location: "Santana do Livramento, RS",
-      description: "Associação de Pais e Amigos dos Excepcionais, promovendo inclusão e alimentação digna para pessoas com deficiência e suas famílias.",
-      volunteers: 12,
-      dailyMeals: 45,
-      totalMeals: 32850,
-      contact: "(55) 3242-1234"
-    },
-    2: {
-      id: 2,
-      name: "Associação de Moradores Caixa D' do Wilson",
-      location: "Santana do Livramento, RS",
-      description: "Organização comunitária que fortalece vínculos através da alimentação solidária, promovendo o desenvolvimento local.",
-      volunteers: 8,
-      dailyMeals: 35,
-      totalMeals: 25550,
-      contact: "(55) 3242-2345"
-    },
-    3: {
-      id: 3,
-      name: "Centro Beneficente Maria Abgahair",
-      location: "Santana do Livramento, RS",
-      description: "Centro de assistência social dedicado ao cuidado com famílias em situação de vulnerabilidade social.",
-      volunteers: 15,
-      dailyMeals: 60,
-      totalMeals: 43800,
-      contact: "(55) 3242-3456"
-    },
-    4: {
-      id: 4,
-      name: "Cidade de Meninos",
-      location: "Santana do Livramento, RS",
-      description: "Projeto social focado no desenvolvimento integral de crianças e adolescentes em situação de risco social.",
-      volunteers: 20,
-      dailyMeals: 80,
-      totalMeals: 58400,
-      contact: "(55) 3242-4567"
-    },
-    5: {
-      id: 5,
-      name: "Cozinha Prato Cheio (Becão)",
-      location: "Santana do Livramento, RS",
-      description: "Cozinha comunitária que oferece refeições nutritivas e acolhimento para famílias da comunidade local.",
-      volunteers: 10,
-      dailyMeals: 50,
-      totalMeals: 36500,
-      contact: "(55) 3242-5678"
-    },
-    6: {
-      id: 6,
-      name: "Cozinha Vila Nova",
-      location: "Santana do Livramento, RS",
-      description: "Iniciativa local que fortalece a comunidade através da solidariedade alimentar e do trabalho voluntário.",
-      volunteers: 14,
-      dailyMeals: 55,
-      totalMeals: 40150,
-      contact: "(55) 3242-6789"
-    },
-    7: {
-      id: 7,
-      name: "Cozinha da Ironda Simon Bolivar",
-      location: "Santana do Livramento, RS",
-      description: "Cozinha comunitária que atende famílias do bairro Simon Bolivar com refeições nutritivas e acolhimento.",
-      volunteers: 9,
-      dailyMeals: 40,
-      totalMeals: 29200,
-      contact: "(55) 3242-7890"
-    },
-    8: {
-      id: 8,
-      name: "Cozinha Pai Marcos",
-      location: "Santana do Livramento, RS",
-      description: "Iniciativa religiosa que combina espiritualidade e solidariedade através da alimentação comunitária.",
-      volunteers: 11,
-      dailyMeals: 48,
-      totalMeals: 35040,
-      contact: "(55) 3242-8901"
-    },
-    9: {
-      id: 9,
-      name: "Conferência São Vicente de Paula",
-      location: "Santana do Livramento, RS",
-      description: "Organização católica dedicada ao atendimento de famílias em situação de vulnerabilidade social.",
-      volunteers: 13,
-      dailyMeals: 52,
-      totalMeals: 37960,
-      contact: "(55) 3242-9012"
-    },
-    10: {
-      id: 10,
-      name: "Clube de Mães Nossa Senhora",
-      location: "Santana do Livramento, RS",
-      description: "Grupo de mães que se unem para oferecer apoio alimentar e fortalecimento comunitário.",
-      volunteers: 7,
-      dailyMeals: 30,
-      totalMeals: 21900,
-      contact: "(55) 3242-0123"
-    },
-    11: {
-      id: 11,
-      name: "Creche Santa Elvira",
-      location: "Santana do Livramento, RS",
-      description: "Creche comunitária que oferece educação infantil e alimentação adequada para crianças carentes.",
-      volunteers: 16,
-      dailyMeals: 65,
-      totalMeals: 47425,
-      contact: "(55) 3242-1234"
-    },
-    12: {
-      id: 12,
-      name: "Creche Pai Sete",
-      location: "Santana do Livramento, RS",
-      description: "Centro de educação infantil que promove desenvolvimento integral através de educação e alimentação.",
-      volunteers: 18,
-      dailyMeals: 70,
-      totalMeals: 51100,
-      contact: "(55) 3242-2345"
-    },
-    13: {
-      id: 13,
-      name: "CURA (Centro Umbandista de Rituais Afros)",
-      location: "Santana do Livramento, RS",
-      description: "Centro religioso que combina tradições afro-brasileiras com ações sociais de alimentação comunitária.",
-      volunteers: 6,
-      dailyMeals: 25,
-      totalMeals: 18250,
-      contact: "(55) 3242-3456"
-    },
-    14: {
-      id: 14,
-      name: "Movimento de Meninos",
-      location: "Santana do Livramento, RS",
-      description: "Organização que trabalha com crianças e adolescentes em situação de rua, oferecendo acolhimento e alimentação.",
-      volunteers: 22,
-      dailyMeals: 85,
-      totalMeals: 62025,
-      contact: "(55) 3242-4567"
-    },
-    15: {
-      id: 15,
-      name: "Lar de Meninas",
-      location: "Santana do Livramento, RS",
-      description: "Instituição que acolhe meninas em situação de vulnerabilidade, oferecendo proteção e alimentação adequada.",
-      volunteers: 19,
-      dailyMeals: 75,
-      totalMeals: 54750,
-      contact: "(55) 3242-5678"
-    },
-    16: {
-      id: 16,
-      name: "Projeto Rosas de Ouro",
-      location: "Santana do Livramento, RS",
-      description: "Projeto social que trabalha com idosos, oferecendo atividades recreativas e alimentação balanceada.",
-      volunteers: 5,
-      dailyMeals: 20,
-      totalMeals: 14600,
-      contact: "(55) 3242-6789"
-    },
-    17: {
-      id: 17,
-      name: "Projeto Tche",
-      location: "Santana do Livramento, RS",
-      description: "Iniciativa cultural e social que promove tradições gaúchas através de atividades comunitárias e alimentação.",
-      volunteers: 8,
-      dailyMeals: 35,
-      totalMeals: 25550,
-      contact: "(55) 3242-7890"
-    },
-    18: {
-      id: 18,
-      name: "Projeto Alegria e Canção",
-      location: "Santana do Livramento, RS",
-      description: "Projeto que une música e solidariedade, oferecendo atividades artísticas e alimentação para a comunidade.",
-      volunteers: 12,
-      dailyMeals: 45,
-      totalMeals: 32850,
-      contact: "(55) 3242-8901"
-    },
-    19: {
-      id: 19,
-      name: "SIAN",
-      location: "Santana do Livramento, RS",
-      description: "Sistema de Informação e Atenção à Nutrição que promove segurança alimentar e nutricional na comunidade.",
-      volunteers: 10,
-      dailyMeals: 42,
-      totalMeals: 30660,
-      contact: "(55) 3242-9012"
-    },
-    20: {
-      id: 20,
-      name: "Cozinha Comunitária Centro",
-      location: "Santana do Livramento, RS",
-      description: "Cozinha central que atende a região central da cidade com refeições nutritivas e acolhimento.",
-      volunteers: 14,
-      dailyMeals: 58,
-      totalMeals: 42340,
-      contact: "(55) 3242-0123"
-    },
-    21: {
-      id: 21,
-      name: "Cozinha Solidária Norte",
-      location: "Santana do Livramento, RS",
-      description: "Iniciativa que atende a zona norte da cidade, promovendo segurança alimentar e fortalecimento comunitário.",
-      volunteers: 9,
-      dailyMeals: 38,
-      totalMeals: 27740,
-      contact: "(55) 3242-1234"
-    },
-    22: {
-      id: 22,
-      name: "Cozinha Esperança Sul",
-      location: "Santana do Livramento, RS",
-      description: "Cozinha comunitária da zona sul que oferece esperança e alimentação digna para famílias carentes.",
-      volunteers: 17,
-      dailyMeals: 68,
-      totalMeals: 49640,
-      contact: "(55) 3242-2345"
+  // Obter ID da cozinha da URL
+  const kitchenId = parseInt(window.location.pathname.split('/')[2]) || 1;
+  
+  // Verificar se o usuário pode gerenciar esta cozinha
+  const canManageKitchen = isAuthenticated && user?.kitchen_id === kitchenId;
+
+  // Carregar dados da cozinha e posts
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [kitchenData, postsData] = await Promise.all([
+          getKitchenById(kitchenId),
+          getPostsByKitchen(kitchenId)
+        ]);
+        
+        if (!kitchenData) {
+          setError('Cozinha não encontrada');
+          return;
+        }
+        
+        setKitchen(kitchenData);
+        setPosts(postsData);
+      } catch (err) {
+        setError('Erro ao carregar dados da cozinha');
+        console.error('Erro:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [kitchenId]);
+
+  const handleCreatePost = async () => {
+    if (!newPost.trim() || !kitchen || !isAuthenticated) return;
+    
+    try {
+      const newPostData = await createPost(kitchen.id, postType, newPost);
+      setPosts([newPostData, ...posts]);
+      setNewPost("");
+    } catch (err) {
+      console.error('Erro ao criar post:', err);
     }
   };
 
-  // Obter dados da cozinha baseado no ID da URL
-  const kitchenId = parseInt(window.location.pathname.split('/')[2]) || 1;
-  const kitchen = kitchensData[kitchenId] || kitchensData[1];
-
-  const posts = [
-    {
-      id: 1,
-      type: "location",
-      content: "🍽️ Distribuição hoje às 18h na Praça da Sé! Vamos servir 100 marmitas com arroz, feijão, frango e salada. Quem puder aparecer para ajudar, será muito bem-vindo!",
-      timestamp: "2 horas atrás",
-      likes: 24,
-      comments: 5
-    },
-    {
-      id: 2,
-      type: "need",
-      content: "🙏 Estamos precisando de doações de: • Arroz (10kg) • Feijão (5kg) • Óleo de cozinha • Temperos • Legumes frescos. Qualquer ajuda é muito importante!",
-      timestamp: "1 dia atrás",
-      likes: 45,
-      comments: 12
-    },
-    {
-      id: 3,
-      type: "info",
-      content: "❤️ Que alegria! Hoje completamos 3 anos de atividade. Já foram mais de 87 mil refeições servidas com muito amor. Obrigado a todos os voluntários e apoiadores que tornaram isso possível!",
-      timestamp: "3 dias atrás",
-      likes: 78,
-      comments: 23
-    }
-  ];
-
-  const handleCreatePost = () => {
-    if (!newPost.trim()) return;
+  const handleDeletePost = async (postId: number) => {
+    if (!isAuthenticated) return;
     
-    // Em produção, aqui seria enviado para o Supabase
-    console.log("Criando post:", { content: newPost, type: postType });
-    setNewPost("");
+    try {
+      await deletePost(postId);
+      setPosts(posts.filter(post => post.id !== postId));
+    } catch (err) {
+      console.error('Erro ao deletar post:', err);
+    }
   };
 
   const getPostIcon = (type: string) => {
     switch (type) {
-      case "location": return <MapPin className="w-4 h-4 text-accent" />;
+      case "location": return <MapPin className="w-4 h-4 text-black" />;
       case "need": return <AlertCircle className="w-4 h-4 text-secondary" />;
       default: return <Heart className="w-4 h-4 text-primary" />;
     }
@@ -291,6 +94,36 @@ const KitchenProfile = () => {
     }
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="pt-16 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p>Carregando dados da cozinha...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !kitchen) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="pt-16 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-4" />
+            <p className="text-red-500">{error || 'Cozinha não encontrada'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -303,9 +136,13 @@ const KitchenProfile = () => {
             <div className="flex flex-col md:flex-row items-start md:items-end space-y-6 md:space-y-0 md:space-x-8">
               {/* Avatar da Cozinha */}
               <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
-                <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
-                  CE
-                </AvatarFallback>
+                {kitchen.avatar_url ? (
+                  <AvatarImage src={kitchen.avatar_url} alt={`Foto da ${kitchen.name}`} />
+                ) : (
+                  <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+                    {kitchen.name ? kitchen.name.charAt(0).toUpperCase() : 'C'}
+                  </AvatarFallback>
+                )}
               </Avatar>
 
               {/* Informações da Cozinha */}
@@ -324,11 +161,11 @@ const KitchenProfile = () => {
                     <div className="text-sm text-gray-700">Voluntários</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">{kitchen.dailyMeals}</div>
+                    <div className="text-2xl font-bold text-gray-900">{kitchen.daily_meals}</div>
                     <div className="text-sm text-gray-700">Refeições/dia</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">{kitchen.totalMeals.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-gray-900">{kitchen.total_meals?.toLocaleString()}</div>
                     <div className="text-sm text-gray-700">Total servido</div>
                   </div>
                 </div>
@@ -350,8 +187,9 @@ const KitchenProfile = () => {
             {/* Feed de Posts */}
             <div className="lg:col-span-2 space-y-6">
               {/* Criar Post - Só visível para a própria cozinha */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Criar nova publicação</h3>
+              {canManageKitchen ? (
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Criar nova publicação</h3>
                 
                 {/* Tipo de Post */}
                 <div className="flex space-x-2 mb-4">
@@ -404,52 +242,68 @@ const KitchenProfile = () => {
                   </Button>
                 </div>
               </Card>
+              ) : null}
 
               {/* Posts */}
-              {posts.map((post) => (
-                <Card key={post.id} className="p-6 hover:shadow-md transition-shadow">
-                  {/* Header do Post */}
-                  <div className="flex items-start space-x-3 mb-4">
-                    <Avatar className="w-12 h-12">
-                      <AvatarFallback className="bg-primary text-primary-foreground">CE</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h4 className="font-semibold">{kitchen.name}</h4>
-                        <Badge variant="secondary" className="text-xs">
-                          {getPostIcon(post.type)}
-                          <span className="ml-1">{getPostTypeLabel(post.type)}</span>
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{post.timestamp}</p>
-                    </div>
-                  </div>
-
-                  {/* Conteúdo do Post */}
-                  <p className="text-foreground mb-4 leading-relaxed whitespace-pre-line">
-                    {post.content}
-                  </p>
-
-                  <Separator className="mb-4" />
-
-                  {/* Ações do Post */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-6">
-                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-                        <Heart className="w-4 h-4 mr-1" />
-                        {post.likes}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-                        <MessageCircle className="w-4 h-4 mr-1" />
-                        {post.comments}
-                      </Button>
-                    </div>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-                      <Share2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+              {posts.length === 0 ? (
+                <Card className="p-6 text-center">
+                  <p className="text-muted-foreground">Nenhum post ainda. Seja o primeiro a compartilhar algo!</p>
                 </Card>
-              ))}
+              ) : (
+                posts.map((post) => (
+                  <Card key={post.id} className="p-6 hover:shadow-md transition-shadow">
+                    {/* Header do Post */}
+                    <div className="flex items-start space-x-3 mb-4">
+                      <Avatar className="w-12 h-12">
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {kitchen.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="font-semibold">{kitchen.name}</h4>
+                          <Badge variant="secondary" className="text-xs">
+                            {getPostIcon(post.type)}
+                            <span className="ml-1">{getPostTypeLabel(post.type)}</span>
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(post.created_at).toLocaleString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Conteúdo do Post */}
+                    <p className="text-foreground mb-4 leading-relaxed whitespace-pre-line">
+                      {post.content}
+                    </p>
+
+                    <Separator className="mb-4" />
+
+                    {/* Ações do Post */}
+                    {canManageKitchen && (
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-muted-foreground hover:text-blue-600"
+                          onClick={() => {/* TODO: Implementar edição */}}
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-muted-foreground hover:text-red-600"
+                          onClick={() => handleDeletePost(post.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
+                ))
+              )}
             </div>
 
             {/* Sidebar */}
@@ -463,13 +317,14 @@ const KitchenProfile = () => {
                     <span>{kitchen.location}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-primary" />
-                    <span>Seg-Sex: 17h-19h</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
                     <Users className="w-4 h-4 text-primary" />
                     <span>{kitchen.volunteers} voluntários ativos</span>
                   </div>
+                  {kitchen.contact_phone && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium">Contato: {kitchen.contact_phone}</span>
+                    </div>
+                  )}
                 </div>
               </Card>
 

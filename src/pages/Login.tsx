@@ -5,19 +5,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
-import { Heart, Eye, EyeOff } from "lucide-react";
+import { Heart, Eye, EyeOff, Loader2 } from "lucide-react";
+import { login } from "@/lib/api";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Em produção, aqui seria feita a autenticação via Supabase
-    console.log("Login attempt:", formData);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await login(formData.email, formData.password);
+      
+      // Usar o hook de autenticação
+      authLogin(response.user);
+      
+      // Redirecionar para o perfil da cozinha
+      navigate(`/cozinha/${response.user.kitchen_id}`);
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao fazer login');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,6 +63,12 @@ const Login = () => {
 
           {/* Formulário de Login */}
           <Card className="p-8">
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email">Email da Cozinha</Label>
@@ -91,8 +119,15 @@ const Login = () => {
                 </a>
               </div>
 
-              <Button type="submit" className="w-full" size="lg">
-                Entrar
+              <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Entrando...
+                  </>
+                ) : (
+                  'Entrar'
+                )}
               </Button>
             </form>
 
@@ -100,6 +135,19 @@ const Login = () => {
 
           {/* Informações de Suporte */}
           <div className="mt-8 text-center">
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <h3 className="text-sm font-semibold text-blue-800 mb-2">Credenciais de Teste</h3>
+              <p className="text-xs text-blue-600 mb-1">
+                <strong>Email:</strong> apae@comsea.com
+              </p>
+              <p className="text-xs text-blue-600 mb-1">
+                <strong>Senha:</strong> 123456
+              </p>
+              <p className="text-xs text-blue-500 mt-2">
+                Ou use qualquer email de cozinha cadastrada com senha "123456"
+              </p>
+            </div>
+            
             <p className="text-sm text-muted-foreground mb-2">
               Precisa de ajuda para acessar sua conta?
             </p>

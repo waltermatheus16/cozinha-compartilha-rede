@@ -1,33 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Users, Clock, ChefHat } from "lucide-react";
+import { MapPin, Users, Clock, ChefHat, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getKitchens } from "@/lib/api";
 
 export const KitchensPreview = () => {
-  const allKitchens = [
-    { id: 1, name: "APAE", volunteers: 12, dailyMeals: 45 },
-    { id: 2, name: "Associação de Moradores Caixa D' do Wilson", volunteers: 8, dailyMeals: 35 },
-    { id: 3, name: "Centro Beneficente Maria Abgahair", volunteers: 15, dailyMeals: 60 },
-    { id: 4, name: "Cidade de Meninos", volunteers: 20, dailyMeals: 80 },
-    { id: 5, name: "Cozinha Prato Cheio (Becão)", volunteers: 10, dailyMeals: 50 },
-    { id: 6, name: "Cozinha Vila Nova", volunteers: 14, dailyMeals: 55 },
-    { id: 7, name: "Cozinha da Ironda Simon Bolivar", volunteers: 9, dailyMeals: 40 },
-    { id: 8, name: "Cozinha Pai Marcos", volunteers: 11, dailyMeals: 48 },
-    { id: 9, name: "Conferência São Vicente de Paula", volunteers: 13, dailyMeals: 52 },
-    { id: 10, name: "Clube de Mães Nossa Senhora", volunteers: 7, dailyMeals: 30 },
-    { id: 11, name: "Creche Santa Elvira", volunteers: 16, dailyMeals: 65 },
-    { id: 12, name: "Creche Pai Sete", volunteers: 18, dailyMeals: 70 },
-    { id: 13, name: "CURA (Centro Umbandista de Rituais Afros)", volunteers: 6, dailyMeals: 25 },
-    { id: 14, name: "Movimento de Meninos", volunteers: 22, dailyMeals: 85 },
-    { id: 15, name: "Lar de Meninas", volunteers: 19, dailyMeals: 75 },
-    { id: 16, name: "Projeto Rosas de Ouro", volunteers: 5, dailyMeals: 20 },
-    { id: 17, name: "Projeto Tche", volunteers: 8, dailyMeals: 35 },
-    { id: 18, name: "Projeto Alegria e Canção", volunteers: 12, dailyMeals: 45 },
-    { id: 19, name: "SIAN", volunteers: 10, dailyMeals: 42 },
-    { id: 20, name: "Cozinha Comunitária Centro", volunteers: 14, dailyMeals: 58 },
-    { id: 21, name: "Cozinha Solidária Norte", volunteers: 9, dailyMeals: 38 },
-    { id: 22, name: "Cozinha Esperança Sul", volunteers: 17, dailyMeals: 68 }
-  ];
+  const [allKitchens, setAllKitchens] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadKitchens = async () => {
+      try {
+        setLoading(true);
+        const kitchens = await getKitchens();
+        setAllKitchens(kitchens);
+      } catch (err) {
+        setError('Erro ao carregar cozinhas');
+        console.error('Erro:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadKitchens();
+  }, []);
 
   return (
     <section id="cozinhas" className="py-12 lg:py-20 bg-background">
@@ -48,8 +46,20 @@ export const KitchensPreview = () => {
         </div>
 
         {/* All Kitchens Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-4 mb-12">
-          {allKitchens.map((kitchen) => (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+              <p>Carregando cozinhas...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-4 mb-12">
+            {allKitchens.map((kitchen) => (
             <Card 
               key={kitchen.id} 
               className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary/50 overflow-hidden"
@@ -84,7 +94,7 @@ export const KitchensPreview = () => {
                         <Clock className="w-3 h-3 text-secondary" />
                         <span className="text-muted-foreground">Ref.</span>
                       </div>
-                      <span className="font-semibold">{kitchen.dailyMeals}</span>
+                      <span className="font-semibold">{kitchen.daily_meals}</span>
                     </div>
                   </div>
                 </div>
@@ -102,13 +112,14 @@ export const KitchensPreview = () => {
                 </div>
               </div>
             </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Info Section */}
         <div className="text-center px-4">
           <p className="text-base lg:text-lg text-muted-foreground">
-            Conheça as 22 cozinhas solidárias que fazem parte da nossa rede em Santana do Livramento
+            Conheça as {allKitchens.length} cozinhas solidárias que fazem parte da nossa rede em Santana do Livramento
           </p>
         </div>
       </div>

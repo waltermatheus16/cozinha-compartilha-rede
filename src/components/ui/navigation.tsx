@@ -1,10 +1,36 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, LogIn, LogOut, User, ChevronDown, Settings } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    setIsUserMenuOpen(false);
+  };
+
+  // Fechar dropdown quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -22,7 +48,10 @@ export const Navigation = () => {
             </div>
           </button>
 
-          {/* Desktop Navigation */}
+          {/* Spacer para centralizar a navegação */}
+          <div className="flex-1"></div>
+
+          {/* Desktop Navigation - Centralizada */}
           <div className="hidden md:flex items-center space-x-8">
             <a href="#" className="text-foreground hover:text-primary transition-colors">
               Início
@@ -36,6 +65,62 @@ export const Navigation = () => {
             <a href="#" className="text-foreground hover:text-primary transition-colors">
               Contato
             </a>
+          </div>
+
+          {/* Spacer para empurrar o botão para a direita */}
+          <div className="flex-1"></div>
+
+          {/* Auth Buttons - Posicionado à extrema direita */}
+          <div className="hidden md:flex items-center">
+            {isAuthenticated ? (
+              <div className="relative" ref={userMenuRef}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center space-x-2"
+                >
+                  <User className="w-4 h-4" />
+                  <span>{user?.kitchen_name}</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                </Button>
+                
+                {/* Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-md shadow-lg z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          navigate(`/cozinha/${user?.kitchen_id}`);
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                      >
+                        <User className="w-4 h-4 mr-3" />
+                        Meu Perfil
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate(`/cozinha/${user?.kitchen_id}/editar`);
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                      >
+                        <Settings className="w-4 h-4 mr-3" />
+                        Editar Perfil
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        Sair
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
 
           {/* Mobile menu button */}
@@ -67,6 +152,51 @@ export const Navigation = () => {
               <a href="#" className="text-foreground hover:text-primary transition-colors">
                 Contato
               </a>
+              
+              {/* Mobile Auth Buttons */}
+              {isAuthenticated ? (
+                <div className="pt-4 border-t border-border">
+                  <div className="text-sm text-muted-foreground mb-2">
+                    Logado como: {user?.kitchen_name}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start mb-2"
+                    onClick={() => {
+                      navigate(`/cozinha/${user?.kitchen_id}`);
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Meu Perfil
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start mb-2"
+                    onClick={() => {
+                      navigate(`/cozinha/${user?.kitchen_id}/editar`);
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Editar Perfil
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      handleLogout();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sair
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </div>
         )}

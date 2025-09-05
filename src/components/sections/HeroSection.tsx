@@ -1,9 +1,29 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, MapPin, Utensils } from "lucide-react";
+import { Users, MapPin, Utensils, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getKitchenStats } from "@/lib/api";
 import heroImage from "@/assets/hero-kitchen.jpg";
 
 export const HeroSection = () => {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const statsData = await getKitchenStats();
+        setStats(statsData);
+      } catch (err) {
+        console.error('Erro ao carregar estatísticas:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
+
   return (
     <section className="relative min-h-screen flex items-center pt-16">
       {/* Background with overlay */}
@@ -50,16 +70,34 @@ export const HeroSection = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6 px-2 sm:px-0">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 lg:mb-2">22</div>
+                {loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                ) : (
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 lg:mb-2">
+                    {stats?.total_kitchens || '22'}
+                  </div>
+                )}
                 <div className="text-xs sm:text-sm text-white/80">Cozinhas Ativas</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-secondary mb-1 lg:mb-2">500+</div>
+                {loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                ) : (
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-secondary mb-1 lg:mb-2">
+                    {stats?.total_daily_meals ? `${stats.total_daily_meals}+` : '500+'}
+                  </div>
+                )}
                 <div className="text-xs sm:text-sm text-white/80">Refeições/Dia</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 lg:mb-2">50k+</div>
-                <div className="text-xs sm:text-sm text-white/80">Pessoas Atendidas</div>
+                {loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                ) : (
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 lg:mb-2">
+                    {stats?.total_meals_served ? `${Math.floor(stats.total_meals_served / 1000)}k+` : '50k+'}
+                  </div>
+                )}
+                <div className="text-xs sm:text-sm text-white/80">Refeições Servidas</div>
               </div>
             </div>
           </div>
