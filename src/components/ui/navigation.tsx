@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
-import { Menu, X, LogIn, LogOut, User, ChevronDown, Settings } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, ChevronDown, Settings, Shield } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -91,24 +91,44 @@ export const Navigation = () => {
                     <div className="py-1">
                       <button
                         onClick={() => {
-                          navigate(`/cozinha/${user?.kitchen_id}`);
+                          if (isAdmin) {
+                            navigate('/cozinha/0'); // Perfil COMSEA
+                          } else {
+                            navigate(`/cozinha/${user?.kitchen_id}`);
+                          }
                           setIsUserMenuOpen(false);
                         }}
                         className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                       >
                         <User className="w-4 h-4 mr-3" />
-                        Meu Perfil
+                        {isAdmin ? 'Perfil COMSEA' : 'Meu Perfil'}
                       </button>
                       <button
                         onClick={() => {
-                          navigate(`/cozinha/${user?.kitchen_id}/editar`);
+                          if (isAdmin) {
+                            navigate('/cozinha/0/editar'); // Editar perfil COMSEA
+                          } else {
+                            navigate(`/cozinha/${user?.kitchen_id}/editar`);
+                          }
                           setIsUserMenuOpen(false);
                         }}
                         className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                       >
                         <Settings className="w-4 h-4 mr-3" />
-                        Editar Perfil
+                        {isAdmin ? 'Editar COMSEA' : 'Editar Perfil'}
                       </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            navigate('/admin');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                        >
+                          <Shield className="w-4 h-4 mr-3" />
+                          Painel Admin
+                        </button>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
@@ -164,25 +184,47 @@ export const Navigation = () => {
                     size="sm"
                     className="w-full justify-start mb-2"
                     onClick={() => {
-                      navigate(`/cozinha/${user?.kitchen_id}`);
+                      if (isAdmin) {
+                        navigate('/cozinha/0'); // Perfil COMSEA
+                      } else {
+                        navigate(`/cozinha/${user?.kitchen_id}`);
+                      }
                       setIsMenuOpen(false);
                     }}
                   >
                     <User className="w-4 h-4 mr-2" />
-                    Meu Perfil
+                    {isAdmin ? 'Perfil COMSEA' : 'Meu Perfil'}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     className="w-full justify-start mb-2"
                     onClick={() => {
-                      navigate(`/cozinha/${user?.kitchen_id}/editar`);
+                      if (isAdmin) {
+                        navigate('/cozinha/0/editar'); // Editar perfil COMSEA
+                      } else {
+                        navigate(`/cozinha/${user?.kitchen_id}/editar`);
+                      }
                       setIsMenuOpen(false);
                     }}
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    Editar Perfil
+                    {isAdmin ? 'Editar COMSEA' : 'Editar Perfil'}
                   </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start mb-2"
+                      onClick={() => {
+                        navigate('/admin');
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Painel Admin
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"

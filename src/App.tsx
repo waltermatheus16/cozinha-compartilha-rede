@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import KitchenProfile from "./pages/KitchenProfile";
 import EditKitchenProfile from "./pages/EditKitchenProfile";
 import Login from "./pages/Login";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/cozinha/:id" element={<KitchenProfile />} />
             <Route path="/cozinha/:id/editar" element={<EditKitchenProfile />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={<AdminPanel />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

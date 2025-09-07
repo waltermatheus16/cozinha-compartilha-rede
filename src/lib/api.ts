@@ -35,6 +35,32 @@ export async function updateKitchen(id: number, data: any) {
   return response.json();
 }
 
+export async function createKitchen(data: any) {
+  const response = await fetch(`${API_BASE_URL}/kitchens`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    throw new Error('Erro ao criar cozinha');
+  }
+  return response.json();
+}
+
+export async function deleteKitchen(id: number) {
+  const response = await fetch(`${API_BASE_URL}/kitchens/${id}`, {
+    method: 'DELETE'
+  });
+  
+  if (!response.ok) {
+    throw new Error('Erro ao deletar cozinha');
+  }
+  return response.json();
+}
+
 export async function getKitchenStats() {
   const response = await fetch(`${API_BASE_URL}/stats`);
   if (!response.ok) {

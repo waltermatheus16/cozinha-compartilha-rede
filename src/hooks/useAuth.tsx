@@ -2,17 +2,18 @@ import { useState, useEffect, createContext, useContext } from 'react';
 
 interface User {
   id: number;
-  kitchen_id: number;
+  kitchen_id: number | null;
   email: string;
   role: string;
   is_active: boolean;
-  kitchen_name: string;
-  location: string;
+  kitchen_name?: string;
+  location?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   login: (user: User) => void;
   logout: () => void;
   isLoading: boolean;
@@ -32,6 +33,9 @@ export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Verificar se o usuário é administrador
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     // Verificar se há dados de autenticação no localStorage
@@ -70,6 +74,7 @@ export const useAuthState = () => {
   return {
     user,
     isAuthenticated,
+    isAdmin,
     login,
     logout,
     isLoading

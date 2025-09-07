@@ -22,7 +22,7 @@ const KitchenProfile = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Obter ID da cozinha da URL
-  const kitchenId = parseInt(window.location.pathname.split('/')[2]) || 1;
+  const kitchenId = parseInt(window.location.pathname.split('/')[2]);
   
   // Verificar se o usuário pode gerenciar esta cozinha
   const canManageKitchen = isAuthenticated && user?.kitchen_id === kitchenId;

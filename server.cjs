@@ -77,6 +77,53 @@ app.put('/api/kitchens/:id', async (req, res) => {
   }
 });
 
+// Criar nova cozinha (apenas admin)
+app.post('/api/kitchens', async (req, res) => {
+  try {
+    const { name, description, location, contact_phone, contact_email, volunteers, daily_meals, avatar_url } = req.body;
+    
+    if (!name || !location) {
+      return res.status(400).json({ error: 'Nome e localização são obrigatórios' });
+    }
+    
+    const result = await pool.query(`
+      INSERT INTO kitchens (name, description, location, contact_phone, contact_email, volunteers, daily_meals, avatar_url) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      RETURNING *
+    `, [name, description, location, contact_phone, contact_email, volunteers || 0, daily_meals || 0, avatar_url]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao criar cozinha:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Deletar cozinha (apenas admin)
+app.delete('/api/kitchens/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Verificar se a cozinha existe
+    const checkResult = await pool.query('SELECT id FROM kitchens WHERE id = $1', [id]);
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Cozinha não encontrada' });
+    }
+    
+    // Deletar cozinha (cascade vai deletar posts, voluntários, etc.)
+    const result = await pool.query('DELETE FROM kitchens WHERE id = $1 RETURNING *', [id]);
+    
+    res.json({ 
+      success: true, 
+      message: 'Cozinha deletada com sucesso',
+      deletedKitchen: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Erro ao deletar cozinha:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 app.get('/api/kitchens/:id/posts', async (req, res) => {
   try {
     const { id } = req.params;
@@ -166,7 +213,7 @@ app.post('/api/auth/login', async (req, res) => {
     const result = await pool.query(`
       SELECT u.*, k.name as kitchen_name, k.location, k.id as kitchen_id
       FROM users u 
-      JOIN kitchens k ON u.kitchen_id = k.id 
+      LEFT JOIN kitchens k ON u.kitchen_id = k.id 
       WHERE u.email = $1 AND u.password = $2 AND u.is_active = true
     `, [email, password]);
     

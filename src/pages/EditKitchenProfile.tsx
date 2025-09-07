@@ -21,7 +21,7 @@ const EditKitchenProfile = () => {
   const [success, setSuccess] = useState(false);
 
   // Obter ID da cozinha da URL
-  const kitchenId = parseInt(window.location.pathname.split('/')[2]) || 1;
+  const kitchenId = parseInt(window.location.pathname.split('/')[2]);
 
   // Verificar se o usuário pode editar esta cozinha
   // Garantir que ambos os valores sejam numbers para comparação correta
