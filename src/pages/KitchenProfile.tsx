@@ -20,6 +20,9 @@ const KitchenProfile = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [postImageFile, setPostImageFile] = useState<File | null>(null);
+  const [postImagePreview, setPostImagePreview] = useState<string | null>(null);
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
 
   // Obter ID da cozinha da URL
   const kitchenId = parseInt(window.location.pathname.split('/')[2]);
@@ -56,15 +59,63 @@ const KitchenProfile = () => {
   }, [kitchenId]);
 
   const handleCreatePost = async () => {
-    if (!newPost.trim() || !kitchen || !isAuthenticated) return;
+    if ((!newPost.trim() && !postImageFile) || !kitchen || !isAuthenticated) return;
+    
+    setIsCreatingPost(true);
+    setError(null);
     
     try {
-      const newPostData = await createPost(kitchen.id, postType, newPost);
+      let imageUrl = null;
+      
+      // Se há uma imagem, converter para base64
+      if (postImageFile) {
+        imageUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(postImageFile);
+        });
+      }
+      
+      const newPostData = await createPost(kitchen.id, postType, newPost, imageUrl);
       setPosts([newPostData, ...posts]);
       setNewPost("");
+      setPostImageFile(null);
+      setPostImagePreview(null);
     } catch (err) {
       console.error('Erro ao criar post:', err);
+      setError('Erro ao criar post. Tente novamente.');
+    } finally {
+      setIsCreatingPost(false);
     }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Por favor, selecione um arquivo de imagem válido');
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        setError('A imagem deve ter no máximo 5MB');
+        return;
+      }
+      
+      setPostImageFile(file);
+      
+      // Criar preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPostImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setPostImageFile(null);
+    setPostImagePreview(null);
   };
 
   const handleDeletePost = async (postId: number) => {
@@ -135,11 +186,11 @@ const KitchenProfile = () => {
           <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="flex flex-col md:flex-row items-start md:items-end space-y-6 md:space-y-0 md:space-x-8">
               {/* Avatar da Cozinha */}
-              <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
+              <Avatar className="w-32 h-32 border-4 border-white shadow-lg">
                 {kitchen.avatar_url ? (
                   <AvatarImage src={kitchen.avatar_url} alt={`Foto da ${kitchen.name}`} />
                 ) : (
-                  <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+                  <AvatarFallback className="text-3xl font-bold bg-primary text-primary-foreground">
                     {kitchen.name ? kitchen.name.charAt(0).toUpperCase() : 'C'}
                   </AvatarFallback>
                 )}
@@ -231,14 +282,65 @@ const KitchenProfile = () => {
                   rows={4}
                 />
 
+                {/* Exibir erro se houver */}
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <div className="flex items-center">
+                      <AlertCircle className="w-4 h-4 text-red-500 mr-2" />
+                      <span className="text-red-700 text-sm">{error}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Preview da imagem */}
+                {postImagePreview && (
+                  <div className="mb-4 relative">
+                    <img 
+                      src={postImagePreview} 
+                      alt="Preview" 
+                      className="w-full h-64 object-cover rounded-lg shadow-md"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={removeImage}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center">
-                  <Button variant="outline" size="sm">
-                    <Camera className="w-4 h-4 mr-2" />
-                    Adicionar Foto
-                  </Button>
-                  <Button onClick={handleCreatePost} disabled={!newPost.trim()}>
-                    <Send className="w-4 h-4 mr-2" />
-                    Publicar
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                      id="post-image"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      asChild
+                    >
+                      <label htmlFor="post-image" className="cursor-pointer">
+                        <Camera className="w-4 h-4 mr-2" />
+                        {postImageFile ? 'Alterar Foto' : 'Adicionar Foto'}
+                      </label>
+                    </Button>
+                  </div>
+                  <Button 
+                    onClick={handleCreatePost} 
+                    disabled={(!newPost.trim() && !postImageFile) || isCreatingPost}
+                  >
+                    {isCreatingPost ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4 mr-2" />
+                    )}
+                    {isCreatingPost ? 'Publicando...' : 'Publicar'}
                   </Button>
                 </div>
               </Card>
@@ -254,7 +356,7 @@ const KitchenProfile = () => {
                   <Card key={post.id} className="p-6 hover:shadow-md transition-shadow">
                     {/* Header do Post */}
                     <div className="flex items-start space-x-3 mb-4">
-                      <Avatar className="w-12 h-12">
+                      <Avatar className="w-16 h-16">
                         <AvatarFallback className="bg-primary text-primary-foreground">
                           {kitchen.name.substring(0, 2).toUpperCase()}
                         </AvatarFallback>
@@ -277,6 +379,17 @@ const KitchenProfile = () => {
                     <p className="text-foreground mb-4 leading-relaxed whitespace-pre-line">
                       {post.content}
                     </p>
+
+                    {/* Imagem do Post */}
+                    {post.image_url && (
+                      <div className="mb-4">
+                        <img 
+                          src={post.image_url} 
+                          alt="Imagem do post" 
+                          className="w-full max-w-2xl rounded-lg shadow-md"
+                        />
+                      </div>
+                    )}
 
                     <Separator className="mb-4" />
 

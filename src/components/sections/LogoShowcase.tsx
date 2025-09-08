@@ -23,7 +23,7 @@ export const LogoShowcase = () => {
               {/* Efeito de sombra/glow */}
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl scale-110"></div>
               <div className="relative">
-                <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48">
+                <div className="w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72">
                   <img 
                     src={logoImage} 
                     alt="COMSEA Logo" 
@@ -42,12 +42,6 @@ export const LogoShowcase = () => {
             </p>
           </div>
           
-          {/* Elementos decorativos */}
-          <div className="flex justify-center space-x-2 mt-8">
-            <div className="w-2 h-2 bg-primary rounded-full"></div>
-            <div className="w-2 h-2 bg-secondary rounded-full"></div>
-            <div className="w-2 h-2 bg-primary rounded-full"></div>
-          </div>
         </div>
       </div>
     </section>

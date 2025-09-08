@@ -3,11 +3,12 @@ const cors = require('cors');
 const { Pool } = require('pg');
 
 const app = express();
-const port = 3001;
+const port = 8080;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Database connection
 const pool = new Pool({
@@ -160,6 +161,25 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
+app.get('/api/posts/kitchen/:kitchenId', async (req, res) => {
+  try {
+    const { kitchenId } = req.params;
+    
+    const result = await pool.query(`
+      SELECT p.*, k.name as kitchen_name, k.location
+      FROM posts p
+      JOIN kitchens k ON p.kitchen_id = k.id
+      WHERE p.kitchen_id = $1
+      ORDER BY p.created_at DESC
+    `, [kitchenId]);
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro ao buscar posts da cozinha:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 app.post('/api/posts', async (req, res) => {
   try {
     const { kitchen_id, type, content, image_url } = req.body;
@@ -211,7 +231,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
     
     const result = await pool.query(`
-      SELECT u.*, k.name as kitchen_name, k.location, k.id as kitchen_id
+      SELECT u.*, k.name as kitchen_name, k.location
       FROM users u 
       LEFT JOIN kitchens k ON u.kitchen_id = k.id 
       WHERE u.email = $1 AND u.password = $2 AND u.is_active = true
@@ -250,6 +270,92 @@ app.get('/api/users', async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('Erro ao buscar usuários:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Alterar senha do próprio usuário
+app.put('/api/auth/change-password', async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+    
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+    }
+    
+    // Verificar senha atual
+    const userResult = await pool.query(
+      'SELECT id, password FROM users WHERE id = $1',
+      [userId]
+    );
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    if (user.password !== currentPassword) {
+      return res.status(401).json({ error: 'Senha atual incorreta' });
+    }
+    
+    // Atualizar senha
+    await pool.query(
+      'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [newPassword, userId]
+    );
+    
+    res.json({ success: true, message: 'Senha alterada com sucesso' });
+    
+  } catch (err) {
+    console.error('Erro ao alterar senha:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Admin alterar senha de qualquer usuário
+app.put('/api/admin/change-password', async (req, res) => {
+  try {
+    const { targetUserId, newPassword, adminUserId } = req.body;
+    
+    if (!targetUserId || !newPassword || !adminUserId) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+    }
+    
+    // Verificar se o usuário é admin
+    const adminResult = await pool.query(
+      'SELECT role FROM users WHERE id = $1',
+      [adminUserId]
+    );
+    
+    if (adminResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário admin não encontrado' });
+    }
+    
+    if (adminResult.rows[0].role !== 'admin') {
+      return res.status(403).json({ error: 'Apenas administradores podem alterar senhas de outros usuários' });
+    }
+    
+    // Verificar se o usuário alvo existe
+    const targetResult = await pool.query(
+      'SELECT id FROM users WHERE id = $1',
+      [targetUserId]
+    );
+    
+    if (targetResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário alvo não encontrado' });
+    }
+    
+    // Atualizar senha
+    await pool.query(
+      'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [newPassword, targetUserId]
+    );
+    
+    res.json({ success: true, message: 'Senha alterada com sucesso' });
+    
+  } catch (err) {
+    console.error('Erro ao alterar senha (admin):', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });

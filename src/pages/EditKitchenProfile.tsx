@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
 import { MapPin, Users, Clock, Save, ArrowLeft, Loader2, AlertCircle, Camera, X } from "lucide-react";
-import { getKitchenById, updateKitchen } from "@/lib/api";
+import { getKitchenById, updateKitchen, changePassword, adminChangePassword } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -25,7 +25,7 @@ const EditKitchenProfile = () => {
 
   // Verificar se o usuário pode editar esta cozinha
   // Garantir que ambos os valores sejam numbers para comparação correta
-  const userKitchenId = user?.kitchen_id ? Number(user.kitchen_id) : null;
+  const userKitchenId = user?.kitchen_id !== null && user?.kitchen_id !== undefined ? Number(user.kitchen_id) : null;
   const canEditKitchen = isAuthenticated && userKitchenId === kitchenId;
 
   // Formulário de edição
@@ -43,6 +43,15 @@ const EditKitchenProfile = () => {
   // Estado para foto de perfil
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+
+  // Estados para alteração de senha
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   // Carregar dados da cozinha
   useEffect(() => {
@@ -167,6 +176,46 @@ const EditKitchenProfile = () => {
     }));
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('As senhas não coincidem');
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 6) {
+      setError('A nova senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+    
+    try {
+      setChangingPassword(true);
+      setError(null);
+      
+      if (user?.role === 'admin') {
+        // Admin pode alterar senha de qualquer usuário
+        await adminChangePassword(user.id, passwordData.newPassword, user.id);
+      } else {
+        // Usuário comum altera sua própria senha
+        await changePassword(user!.id, passwordData.currentPassword, passwordData.newPassword);
+      }
+      
+      setSuccess(true);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setShowPasswordSection(false);
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao alterar senha');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -252,11 +301,11 @@ const EditKitchenProfile = () => {
                 <div className="flex items-center space-x-6">
                   {/* Preview da foto */}
                   <div className="relative">
-                    <Avatar className="w-24 h-24 border-4 border-gray-200">
+                    <Avatar className="w-32 h-32 border-4 border-gray-200">
                       {profileImage ? (
                         <AvatarImage src={profileImage} alt="Foto da cozinha" />
                       ) : (
-                        <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+                        <AvatarFallback className="text-3xl font-bold bg-primary text-primary-foreground">
                           {formData.name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       )}
@@ -396,6 +445,92 @@ const EditKitchenProfile = () => {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Seção de Alteração de Senha */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Alterar Senha</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowPasswordSection(!showPasswordSection)}
+                  >
+                    {showPasswordSection ? 'Cancelar' : 'Alterar Senha'}
+                  </Button>
+                </div>
+                
+                {showPasswordSection && (
+                  <form onSubmit={handlePasswordChange} className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                    {user?.role !== 'admin' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="currentPassword">Senha Atual</Label>
+                        <Input
+                          id="currentPassword"
+                          type="password"
+                          value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                          placeholder="Digite sua senha atual"
+                          required
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">Nova Senha</Label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                        placeholder="Digite a nova senha (mínimo 6 caracteres)"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                        placeholder="Confirme a nova senha"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShowPasswordSection(false);
+                          setPasswordData({
+                            currentPassword: '',
+                            newPassword: '',
+                            confirmPassword: ''
+                          });
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={changingPassword}
+                      >
+                        {changingPassword ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Alterando...
+                          </>
+                        ) : (
+                          'Alterar Senha'
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </div>
 
               {/* Botões de Ação */}

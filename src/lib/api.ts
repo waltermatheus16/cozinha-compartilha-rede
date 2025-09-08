@@ -137,3 +137,47 @@ export async function getAllUsers() {
   }
   return response.json();
 }
+
+// Alterar senha do próprio usuário
+export async function changePassword(userId: number, currentPassword: string, newPassword: string) {
+  const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId,
+      currentPassword,
+      newPassword
+    }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Erro ao alterar senha');
+  }
+  
+  return response.json();
+}
+
+// Admin alterar senha de qualquer usuário
+export async function adminChangePassword(targetUserId: number, newPassword: string, adminUserId: number) {
+  const response = await fetch(`${API_BASE_URL}/admin/change-password`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      targetUserId,
+      newPassword,
+      adminUserId
+    }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Erro ao alterar senha');
+  }
+  
+  return response.json();
+}
