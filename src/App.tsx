@@ -9,6 +9,9 @@ import KitchenProfile from "./pages/KitchenProfile";
 import EditKitchenProfile from "./pages/EditKitchenProfile";
 import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
+import Accessibility from "./pages/Accessibility";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
             <Route path="/cozinha/:id/editar" element={<EditKitchenProfile />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/privacidade" element={<PrivacyPolicy />} />
+            <Route path="/termos" element={<TermsOfUse />} />
+            <Route path="/acessibilidade" element={<Accessibility />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+nhaimport { Pool } from 'pg';
 
 const pool = new Pool({
   user: 'user',

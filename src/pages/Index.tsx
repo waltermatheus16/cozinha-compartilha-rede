@@ -4,6 +4,7 @@ import { LogoShowcase } from "@/components/sections/LogoShowcase";
 import { AboutSection } from "@/components/sections/AboutSection";
 import ComseaPosts from "@/components/sections/ComseaPosts";
 import { KitchensPreview } from "@/components/sections/KitchensPreview";
+import { ContactSection } from "@/components/sections/ContactSection";
 import { Footer } from "@/components/sections/Footer";
 
 const Index = () => {
@@ -15,6 +16,7 @@ const Index = () => {
       <AboutSection />
       <ComseaPosts />
       <KitchensPreview />
+      <ContactSection />
       <Footer />
     </div>
   );

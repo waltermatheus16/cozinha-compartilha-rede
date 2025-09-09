@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, MapPin, Heart, MessageCircle, Info, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Heart, MessageCircle, Info, AlertTriangle, X, ZoomIn } from "lucide-react";
 import { getPostsByKitchen } from "@/lib/api";
 
 const ComseaPosts = () => {
@@ -10,6 +10,7 @@ const ComseaPosts = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [isAutoPlayPaused, setIsAutoPlayPaused] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const postsPerPage = 2;
 
   useEffect(() => {
@@ -238,13 +239,20 @@ const ComseaPosts = () => {
                   {/* Imagem do Post (se houver) */}
                   {post.image_url && (
                     <div className="mb-4 h-48">
-                      <div className="relative overflow-hidden rounded-lg shadow-md h-full">
+                      <div className="relative overflow-hidden rounded-lg shadow-md h-full group cursor-pointer" onClick={() => setSelectedImage(post.image_url)}>
                         <img
                           src={post.image_url}
                           alt="Imagem do post"
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                              <ZoomIn className="w-6 h-6 text-gray-700" />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -296,14 +304,18 @@ const ComseaPosts = () => {
           {totalPages > 1 && (
             <div className="flex justify-center mt-6 space-x-3">
               {Array.from({ length: totalPages }).map((_, index) => (
-                <button
+                <a
                   key={index}
+                  href="#"
                   className={`transition-all duration-300 ${
                     index === currentPage 
                       ? 'w-8 h-3 bg-primary rounded-full shadow-lg' 
                       : 'w-3 h-3 bg-muted rounded-full hover:bg-primary/50 hover:scale-110'
                   }`}
-                  onClick={() => setCurrentPage(index)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentPage(index);
+                  }}
                 />
               ))}
             </div>
@@ -321,6 +333,30 @@ const ComseaPosts = () => {
           </Button>
         </div>
       </div>
+
+      {/* Modal para exibir imagem em tamanho grande */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setSelectedImage(null)}>
+          <div className="relative max-w-4xl max-h-[90vh] mx-4" onClick={(e) => e.stopPropagation()}>
+            {/* Botão de fechar */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute -top-12 right-0 bg-white/90 hover:bg-white text-gray-700 border-white/20"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+            
+            {/* Imagem */}
+            <img
+              src={selectedImage}
+              alt="Imagem do post em tamanho grande"
+              className="w-full h-full object-contain rounded-lg shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 };

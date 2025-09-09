@@ -360,6 +360,61 @@ app.put('/api/admin/change-password', async (req, res) => {
   }
 });
 
+// Buscar mensagens de contato (apenas admin)
+app.get('/api/contact-messages', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM contact_messages 
+      ORDER BY created_at DESC
+    `);
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro ao buscar mensagens de contato:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Enviar email de contato
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+    
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+    }
+    
+    // Validar formato do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Email inválido' });
+    }
+    
+    // Simular envio de email (em produção, usar serviço como SendGrid, Nodemailer, etc.)
+    console.log('📧 Email de contato recebido:');
+    console.log(`Nome: ${name}`);
+    console.log(`Email: ${email}`);
+    console.log(`Assunto: ${subject}`);
+    console.log(`Mensagem: ${message}`);
+    console.log('---');
+    
+    // Salvar no banco de dados (opcional)
+    await pool.query(`
+      INSERT INTO contact_messages (name, email, subject, message, created_at) 
+      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+    `, [name, email, subject, message]);
+    
+    res.json({ 
+      success: true, 
+      message: 'Mensagem enviada com sucesso! Entraremos em contato em breve.' 
+    });
+    
+  } catch (err) {
+    console.error('Erro ao enviar mensagem de contato:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`🚀 Servidor API rodando em http://localhost:${port}`);
   console.log(`📊 Conectado ao banco PostgreSQL`);

@@ -28,7 +28,7 @@ export const KitchensPreview = () => {
   }, []);
 
   return (
-    <section id="cozinhas" className="py-12 lg:py-20 bg-background">
+    <section id="cozinhas" className="pt-12 pb-6 lg:pt-20 lg:pb-8 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12 lg:mb-16">

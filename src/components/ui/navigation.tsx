@@ -56,13 +56,13 @@ export const Navigation = () => {
             <a href="#" className="text-foreground hover:text-primary transition-colors">
               Início
             </a>
-            <a href="#" className="text-foreground hover:text-primary transition-colors">
+            <a href="#cozinhas" className="text-foreground hover:text-primary transition-colors">
               Cozinhas
             </a>
             <a href="#" className="text-foreground hover:text-primary transition-colors">
               Sobre
             </a>
-            <a href="#" className="text-foreground hover:text-primary transition-colors">
+            <a href="#contato" className="text-foreground hover:text-primary transition-colors">
               Contato
             </a>
           </div>
@@ -160,16 +160,16 @@ export const Navigation = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
             <div className="flex flex-col space-y-4">
-              <a href="#" className="text-foreground hover:text-primary transition-colors">
+              <a href="#" className="text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                 Início
               </a>
-              <a href="#" className="text-foreground hover:text-primary transition-colors">
+              <a href="#cozinhas" className="text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                 Cozinhas
               </a>
-              <a href="#" className="text-foreground hover:text-primary transition-colors">
+              <a href="#" className="text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                 Sobre
               </a>
-              <a href="#" className="text-foreground hover:text-primary transition-colors">
+              <a href="#contato" className="text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                 Contato
               </a>
               

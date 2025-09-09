@@ -1,10 +1,11 @@
 import { Heart, Instagram, Facebook, Mail, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Link } from "react-router-dom";
 
 export const Footer = () => {
   return (
-    <footer className="bg-card border-t border-border">
+    <footer id="footer" className="bg-card border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Brand Section */}
@@ -68,11 +69,6 @@ export const Footer = () => {
                   Seja Voluntário
                 </a>
               </li>
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Transparência
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -106,15 +102,15 @@ export const Footer = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 lg:space-x-6 text-xs lg:text-sm text-muted-foreground">
-            <a href="#" className="hover:text-primary transition-colors">
+            <Link to="/privacidade" className="hover:text-primary transition-colors">
               Política de Privacidade
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
+            </Link>
+            <Link to="/termos" className="hover:text-primary transition-colors">
               Termos de Uso
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
+            </Link>
+            <Link to="/acessibilidade" className="hover:text-primary transition-colors">
               Acessibilidade
-            </a>
+            </Link>
           </div>
         </div>
       </div>

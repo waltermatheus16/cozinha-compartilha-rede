@@ -37,9 +37,11 @@ import {
   AlertCircle,
   Save,
   X,
-  Camera
+  Camera,
+  MessageSquare,
+  Eye
 } from "lucide-react";
-import { getKitchens, createKitchen, updateKitchen, deleteKitchen } from "@/lib/api";
+import { getKitchens, createKitchen, updateKitchen, deleteKitchen, getContactMessages } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -54,6 +56,12 @@ const AdminPanel = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingKitchen, setEditingKitchen] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+
+  // Estados para mensagens de contato
+  const [contactMessages, setContactMessages] = useState<any[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
 
   // Formulário para nova cozinha
   const [newKitchen, setNewKitchen] = useState({
@@ -110,6 +118,21 @@ const AdminPanel = () => {
 
     loadKitchens();
   }, []);
+
+  // Carregar mensagens de contato
+  const loadContactMessages = async () => {
+    try {
+      setLoadingMessages(true);
+      console.log('Carregando mensagens de contato...');
+      const data = await getContactMessages();
+      console.log('Mensagens carregadas:', data);
+      setContactMessages(data);
+    } catch (err) {
+      console.error('Erro ao carregar mensagens:', err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
 
   // Filtrar cozinhas por termo de busca
   const filteredKitchens = kitchens.filter(kitchen =>
@@ -324,7 +347,65 @@ const AdminPanel = () => {
           </div>
         </div>
 
-        {/* Conteúdo Principal */}
+        {/* Seção de Mensagens de Contato */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Mensagens de Contato</h2>
+              <p className="text-gray-600">Visualize as mensagens enviadas pelo formulário de contato</p>
+            </div>
+            <Button onClick={loadContactMessages} disabled={loadingMessages}>
+              {loadingMessages ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <MessageSquare className="w-4 h-4 mr-2" />
+              )}
+              {loadingMessages ? 'Carregando...' : 'Carregar Mensagens'}
+            </Button>
+          </div>
+
+          {contactMessages.length === 0 ? (
+            <Card className="p-8 text-center">
+              <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhuma mensagem</h3>
+              <p className="text-gray-600">Clique em "Carregar Mensagens" para ver as mensagens de contato.</p>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {contactMessages.map((message) => (
+                <Card key={message.id} className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{message.name}</h3>
+                        <Badge variant="outline">{message.email}</Badge>
+                      </div>
+                      <h4 className="text-md font-medium text-gray-800 mb-2">{message.subject}</h4>
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{message.message}</p>
+                      <div className="flex items-center space-x-1 text-xs text-gray-500">
+                        <Clock className="w-3 h-3" />
+                        <span>{new Date(message.created_at).toLocaleString('pt-BR')}</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedMessage(message);
+                        setIsMessageDialogOpen(true);
+                      }}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Conteúdo Principal - Cozinhas */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -764,6 +845,36 @@ const AdminPanel = () => {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+
+      {/* Dialog para visualizar mensagem completa */}
+      <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Mensagem de Contato</DialogTitle>
+          </DialogHeader>
+          {selectedMessage && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <h3 className="text-lg font-semibold">{selectedMessage.name}</h3>
+                <Badge variant="outline">{selectedMessage.email}</Badge>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-800 mb-2">Assunto:</h4>
+                <p className="text-gray-600">{selectedMessage.subject}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-800 mb-2">Mensagem:</h4>
+                <p className="text-gray-600 whitespace-pre-wrap">{selectedMessage.message}</p>
+              </div>
+              <div className="flex items-center space-x-1 text-sm text-gray-500">
+                <Clock className="w-4 h-4" />
+                <span>Enviada em: {new Date(selectedMessage.created_at).toLocaleString('pt-BR')}</span>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

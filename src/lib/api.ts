@@ -181,3 +181,39 @@ export async function adminChangePassword(targetUserId: number, newPassword: str
   
   return response.json();
 }
+
+// Enviar mensagem de contato
+export async function sendContactMessage(name: string, email: string, subject: string, message: string) {
+  const response = await fetch(`${API_BASE_URL}/contact`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name,
+      email,
+      subject,
+      message
+    }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Erro ao enviar mensagem');
+  }
+  
+  return response.json();
+}
+
+// Buscar mensagens de contato (apenas admin)
+export async function getContactMessages() {
+  console.log('Fazendo requisição para:', `${API_BASE_URL}/contact-messages`);
+  const response = await fetch(`${API_BASE_URL}/contact-messages`);
+  console.log('Resposta da API:', response.status, response.ok);
+  if (!response.ok) {
+    throw new Error('Erro ao carregar mensagens de contato');
+  }
+  const data = await response.json();
+  console.log('Dados recebidos:', data);
+  return data;
+}
