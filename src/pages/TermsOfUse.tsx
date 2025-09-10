@@ -23,7 +23,7 @@ const TermsOfUse = () => {
                 navigate('/');
                 setTimeout(() => {
                   window.scrollTo(0, document.body.scrollHeight);
-                }, 70);
+                }, 80);
               }}
               className="mb-6"
             >

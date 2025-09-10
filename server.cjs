@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const port = 8080;
@@ -47,11 +48,15 @@ app.get('/api/kitchens/:id', async (req, res) => {
 });
 
 app.put('/api/kitchens/:id', async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { id } = req.params;
-    const { name, description, location, contact_phone, contact_email, volunteers, daily_meals, avatar_url } = req.body;
+    await client.query('BEGIN');
     
-    const result = await pool.query(`
+    const { id } = req.params;
+    const { name, description, location, contact_phone, contact_email, volunteers, daily_meals, avatar_url, password } = req.body;
+    
+    // Atualizar a cozinha
+    const result = await client.query(`
       UPDATE kitchens 
       SET 
         name = $1,
@@ -68,35 +73,73 @@ app.put('/api/kitchens/:id', async (req, res) => {
     `, [name, description, location, contact_phone, contact_email, volunteers, daily_meals, avatar_url, id]);
     
     if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Cozinha não encontrada' });
     }
     
+    // Se uma nova senha foi fornecida, atualizar a senha do usuário
+    if (password && password.trim() !== '') {
+      // Criptografar nova senha
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      await client.query(`
+        UPDATE users 
+        SET password = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE kitchen_id = $2
+      `, [hashedPassword, id]);
+    }
+    
+    await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Erro ao atualizar cozinha:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  } finally {
+    client.release();
   }
 });
 
 // Criar nova cozinha (apenas admin)
 app.post('/api/kitchens', async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { name, description, location, contact_phone, contact_email, volunteers, daily_meals, avatar_url } = req.body;
+    await client.query('BEGIN');
     
-    if (!name || !location) {
-      return res.status(400).json({ error: 'Nome e localização são obrigatórios' });
+    const { name, description, location, contact_phone, contact_email, volunteers, daily_meals, avatar_url, password } = req.body;
+    
+    if (!name || !location || !password) {
+      return res.status(400).json({ error: 'Nome, localização e senha são obrigatórios' });
     }
     
-    const result = await pool.query(`
+    // Criar a cozinha
+    const kitchenResult = await client.query(`
       INSERT INTO kitchens (name, description, location, contact_phone, contact_email, volunteers, daily_meals, avatar_url) 
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
       RETURNING *
     `, [name, description, location, contact_phone, contact_email, volunteers || 0, daily_meals || 0, avatar_url]);
     
-    res.status(201).json(result.rows[0]);
+    const kitchen = kitchenResult.rows[0];
+    
+    // Criar usuário para a cozinha
+    const email = contact_email || `${name.toLowerCase().replace(/\s+/g, '')}@comsea.com`;
+    
+    // Criptografar senha
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    await client.query(`
+      INSERT INTO users (kitchen_id, email, password, role) 
+      VALUES ($1, $2, $3, 'kitchen')
+    `, [kitchen.id, email, hashedPassword]);
+    
+    await client.query('COMMIT');
+    res.status(201).json(kitchen);
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Erro ao criar cozinha:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  } finally {
+    client.release();
   }
 });
 
@@ -230,18 +273,35 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
     
+    // Buscar usuário pelo email
     const result = await pool.query(`
       SELECT u.*, k.name as kitchen_name, k.location
       FROM users u 
       LEFT JOIN kitchens k ON u.kitchen_id = k.id 
-      WHERE u.email = $1 AND u.password = $2 AND u.is_active = true
-    `, [email, password]);
+      WHERE u.email = $1 AND u.is_active = true
+    `, [email]);
     
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
     
     const user = result.rows[0];
+    
+    console.log('🔐 Login debug:', {
+      email: user.email,
+      providedPassword: password,
+      storedPasswordHash: user.password,
+      isBcrypt: user.password.startsWith('$2b$')
+    });
+    
+    // Comparar senha com bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    
+    console.log('🔐 Password comparison result:', isPasswordValid);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
     
     // Remover senha da resposta
     delete user.password;
@@ -274,7 +334,7 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-// Alterar senha do próprio usuário
+// Alterar senha do próprio usuário - APENAS ADMIN
 app.put('/api/auth/change-password', async (req, res) => {
   try {
     const { userId, currentPassword, newPassword } = req.body;
@@ -283,9 +343,9 @@ app.put('/api/auth/change-password', async (req, res) => {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
     
-    // Verificar senha atual
+    // Verificar se o usuário é admin
     const userResult = await pool.query(
-      'SELECT id, password FROM users WHERE id = $1',
+      'SELECT id, password, role FROM users WHERE id = $1',
       [userId]
     );
     
@@ -295,14 +355,24 @@ app.put('/api/auth/change-password', async (req, res) => {
     
     const user = userResult.rows[0];
     
-    if (user.password !== currentPassword) {
+    // Verificar se é admin
+    if (user.role !== 'admin') {
+      return res.status(403).json({ error: 'Apenas administradores podem alterar senhas' });
+    }
+    
+    // Verificar senha atual (com criptografia)
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
       return res.status(401).json({ error: 'Senha atual incorreta' });
     }
     
-    // Atualizar senha
+    // Criptografar nova senha
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Atualizar senha (com criptografia)
     await pool.query(
       'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [newPassword, userId]
+      [hashedNewPassword, userId]
     );
     
     res.json({ success: true, message: 'Senha alterada com sucesso' });
@@ -313,12 +383,37 @@ app.put('/api/auth/change-password', async (req, res) => {
   }
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint para verificar contraseña de usuario
+app.get('/api/debug/user-password', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, email, password FROM users WHERE email = $1', ['apae@comsea.com']);
+    if (result.rows.length > 0) {
+      res.json({ 
+        id: result.rows[0].id,
+        email: result.rows[0].email,
+        password: result.rows[0].password,
+        passwordLength: result.rows[0].password.length
+      });
+    } else {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+  } catch (err) {
+    console.error('Error en debug:', err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // Admin alterar senha de qualquer usuário
 app.put('/api/admin/change-password', async (req, res) => {
   try {
-    const { targetUserId, newPassword, adminUserId } = req.body;
+    const { targetUserId, targetKitchenId, newPassword, adminUserId } = req.body;
     
-    if (!targetUserId || !newPassword || !adminUserId) {
+    if ((!targetUserId && !targetKitchenId) || !newPassword || !adminUserId) {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
     
@@ -336,20 +431,39 @@ app.put('/api/admin/change-password', async (req, res) => {
       return res.status(403).json({ error: 'Apenas administradores podem alterar senhas de outros usuários' });
     }
     
+    let finalTargetUserId = targetUserId;
+    
+    // Se targetKitchenId foi fornecido, encontrar o usuário da cozinha
+    if (targetKitchenId && !targetUserId) {
+      const kitchenUserResult = await pool.query(
+        'SELECT id FROM users WHERE kitchen_id = $1',
+        [targetKitchenId]
+      );
+      
+      if (kitchenUserResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Usuário da cozinha não encontrado' });
+      }
+      
+      finalTargetUserId = kitchenUserResult.rows[0].id;
+    }
+    
     // Verificar se o usuário alvo existe
     const targetResult = await pool.query(
       'SELECT id FROM users WHERE id = $1',
-      [targetUserId]
+      [finalTargetUserId]
     );
     
     if (targetResult.rows.length === 0) {
       return res.status(404).json({ error: 'Usuário alvo não encontrado' });
     }
     
-    // Atualizar senha
+    // Criptografar nova senha
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Atualizar senha (com criptografia)
     await pool.query(
       'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [newPassword, targetUserId]
+      [hashedNewPassword, finalTargetUserId]
     );
     
     res.json({ success: true, message: 'Senha alterada com sucesso' });

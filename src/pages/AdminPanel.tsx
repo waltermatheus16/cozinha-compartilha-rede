@@ -72,7 +72,8 @@ const AdminPanel = () => {
     contact_email: "",
     volunteers: 0,
     daily_meals: 0,
-    avatar_url: ""
+    avatar_url: "",
+    password: ""
   });
 
   // Formulário para editar cozinha
@@ -84,7 +85,8 @@ const AdminPanel = () => {
     contact_email: "",
     volunteers: 0,
     daily_meals: 0,
-    avatar_url: ""
+    avatar_url: "",
+    password: ""
   });
 
   // Estados para upload de imagem
@@ -224,7 +226,8 @@ const AdminPanel = () => {
       contact_email: kitchen.contact_email || "",
       volunteers: kitchen.volunteers || 0,
       daily_meals: kitchen.daily_meals || 0,
-      avatar_url: kitchen.avatar_url || ""
+      avatar_url: kitchen.avatar_url || "",
+      password: ""
     });
     setEditImagePreview(kitchen.avatar_url || null);
     setIsEditDialogOpen(true);
@@ -240,7 +243,8 @@ const AdminPanel = () => {
       contact_email: "",
       volunteers: 0,
       daily_meals: 0,
-      avatar_url: ""
+      avatar_url: "",
+      password: ""
     });
     setNewImageFile(null);
     setNewImagePreview(null);
@@ -255,7 +259,8 @@ const AdminPanel = () => {
       contact_email: "",
       volunteers: 0,
       daily_meals: 0,
-      avatar_url: ""
+      avatar_url: "",
+      password: ""
     });
     setEditImageFile(null);
     setEditImagePreview(null);
@@ -554,6 +559,22 @@ const AdminPanel = () => {
                     </div>
                   </div>
 
+                  {/* Senha para Login */}
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">Senha para Login *</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      value={newKitchen.password}
+                      onChange={(e) => setNewKitchen(prev => ({ ...prev, password: e.target.value }))}
+                      placeholder="Senha para a cozinha fazer login"
+                      required
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Esta senha será usada para a cozinha fazer login no sistema
+                    </p>
+                  </div>
+
                   <div className="flex justify-end space-x-2 pt-4">
                     <Button
                       type="button"
@@ -816,6 +837,21 @@ const AdminPanel = () => {
                   placeholder="0"
                 />
               </div>
+            </div>
+
+            {/* Alterar Senha */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-password">Nova Senha</Label>
+              <Input
+                id="edit-password"
+                type="password"
+                value={editKitchen.password}
+                onChange={(e) => setEditKitchen(prev => ({ ...prev, password: e.target.value }))}
+                placeholder="Deixe em branco para manter a senha atual"
+              />
+              <p className="text-sm text-muted-foreground">
+                Deixe em branco para manter a senha atual da cozinha
+              </p>
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">

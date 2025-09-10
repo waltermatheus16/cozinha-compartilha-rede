@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, Eye, EyeOff, Loader2 } from "lucide-react";
 import { login } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login: authLogin } = useAuth();
+  const { login: authLogin, isAuthenticated, user, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +20,24 @@ const Login = () => {
     email: "",
     password: ""
   });
+
+  // Redirigir si el usuario ya está autenticado
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      // Si es admin, redirigir al panel de admin
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } 
+      // Si es una cozinha, redirigir al perfil de la cozinha
+      else if (user.kitchen_id) {
+        navigate(`/cozinha/${user.kitchen_id}`);
+      }
+      // Si no tiene kitchen_id pero está autenticado, redirigir a la página principal
+      else {
+        navigate('/');
+      }
+    }
+  }, [isAuthenticated, user, isLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +59,21 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="pt-16 min-h-screen flex items-center justify-center px-4">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Verificando autenticación...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,9 +147,9 @@ const Login = () => {
                   <input type="checkbox" className="rounded border-border" />
                   <span>Lembrar de mim</span>
                 </label>
-                <a href="#" className="text-sm text-primary hover:underline">
-                  Esqueci minha senha
-                </a>
+                <div className="text-xs text-muted-foreground">
+                  Contate o administrador para alterar senhas
+                </div>
               </div>
 
               <Button type="submit" className="w-full" size="lg" disabled={loading}>
@@ -136,15 +169,19 @@ const Login = () => {
           {/* Informações de Suporte */}
           <div className="mt-8 text-center">
             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <h3 className="text-sm font-semibold text-blue-800 mb-2">Credenciais de Teste</h3>
-              <p className="text-xs text-blue-600 mb-1">
-                <strong>Email:</strong> apae@comsea.com
-              </p>
-              <p className="text-xs text-blue-600 mb-1">
-                <strong>Senha:</strong> 123456
-              </p>
+              <h3 className="text-sm font-semibold text-blue-800 mb-2">Credenciais de Acesso</h3>
+              <div className="text-xs text-blue-600 mb-2">
+                <strong>Administrador:</strong><br />
+                Email: comsea@admin.com<br />
+                Senha: admin123
+              </div>
+              <div className="text-xs text-blue-600 mb-2">
+                <strong>Cozinha (exemplo):</strong><br />
+                Email: mariabgahair@comsea.com<br />
+                Senha: 123456
+              </div>
               <p className="text-xs text-blue-500 mt-2">
-                Ou use qualquer email de cozinha cadastrada com senha "123456"
+                Apenas administradores podem alterar senhas
               </p>
             </div>
             

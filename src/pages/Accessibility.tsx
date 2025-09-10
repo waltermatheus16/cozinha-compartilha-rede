@@ -23,7 +23,7 @@ const Accessibility = () => {
                 navigate('/');
                 setTimeout(() => {
                   window.scrollTo(0, document.body.scrollHeight);
-                }, 70);
+                }, 90);
               }}
               className="mb-6"
             >

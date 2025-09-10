@@ -138,37 +138,51 @@ export async function getAllUsers() {
   return response.json();
 }
 
-// Alterar senha do próprio usuário
+// Alterar senha do próprio usuário - FUNCIÓN RECREADA
 export async function changePassword(userId: number, currentPassword: string, newPassword: string) {
-  const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      userId,
-      currentPassword,
-      newPassword
-    }),
-  });
+  console.log('🔐 API changePassword called:', { userId, currentPassword, newPassword });
   
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Erro ao alterar senha');
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        currentPassword,
+        newPassword
+      }),
+    });
+    
+    console.log('🔐 API response status:', response.status);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('🔐 API error:', error);
+      throw new Error(error.error || 'Erro ao alterar senha');
+    }
+    
+    const result = await response.json();
+    console.log('🔐 API success:', result);
+    return result;
+    
+  } catch (error) {
+    console.error('🔐 API changePassword error:', error);
+    throw error;
   }
-  
-  return response.json();
 }
 
 // Admin alterar senha de qualquer usuário
-export async function adminChangePassword(targetUserId: number, newPassword: string, adminUserId: number) {
+export async function adminChangePassword(targetUserId: number, newPassword: string, adminUserId: number, targetKitchenId?: number) {
   const response = await fetch(`${API_BASE_URL}/admin/change-password`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      targetUserId,
+      targetUserId: targetKitchenId ? undefined : targetUserId,
+      targetKitchenId,
       newPassword,
       adminUserId
     }),

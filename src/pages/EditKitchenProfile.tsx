@@ -13,12 +13,13 @@ import { useNavigate } from "react-router-dom";
 
 const EditKitchenProfile = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [kitchen, setKitchen] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Obter ID da cozinha da URL
   const kitchenId = parseInt(window.location.pathname.split('/')[2]);
@@ -26,7 +27,8 @@ const EditKitchenProfile = () => {
   // Verificar se o usuário pode editar esta cozinha
   // Garantir que ambos os valores sejam numbers para comparação correta
   const userKitchenId = user?.kitchen_id !== null && user?.kitchen_id !== undefined ? Number(user.kitchen_id) : null;
-  const canEditKitchen = isAuthenticated && userKitchenId === kitchenId;
+  const isAdmin = user?.role === 'admin';
+  const canEditKitchen = isAuthenticated && (isAdmin || userKitchenId === kitchenId);
 
   // Formulário de edição
   const [formData, setFormData] = useState({
@@ -55,6 +57,11 @@ const EditKitchenProfile = () => {
 
   // Carregar dados da cozinha
   useEffect(() => {
+    // Aguardar o carregamento da autenticação
+    if (isLoading) {
+      return;
+    }
+
     const loadKitchen = async () => {
       try {
         setLoading(true);
@@ -65,8 +72,10 @@ const EditKitchenProfile = () => {
           return;
         }
 
-        // Verificar se o usuário pode editar
-        if (!canEditKitchen) {
+        // Verificar se o usuário pode editar - lógica mais explícita
+        const canEdit = isAuthenticated && (isAdmin || userKitchenId === kitchenId);
+        
+        if (!canEdit) {
           setError('Você não tem permissão para editar esta cozinha');
           return;
         }
@@ -96,7 +105,27 @@ const EditKitchenProfile = () => {
     };
 
     loadKitchen();
-  }, [kitchenId, canEditKitchen]);
+  }, [kitchenId, canEditKitchen, isLoading]);
+
+  // Limpar mensagem de sucesso após 5 segundos
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess(false);
+        setSuccessMessage('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
+  // Limpar errores cuando se abre la sección de contraseña
+  useEffect(() => {
+    if (showPasswordSection) {
+      setError(null);
+      setSuccess(false);
+      setSuccessMessage('');
+    }
+  }, [showPasswordSection]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,28 +208,48 @@ const EditKitchenProfile = () => {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Solo administradores pueden cambiar contraseñas
+    if (user?.role !== 'admin') {
+      setError('Apenas administradores podem alterar senhas');
+      return;
+    }
+    
+    console.log('🔐 === INICIO CAMBIO DE CONTRASEÑA (ADMIN) ===');
+    console.log('🔐 Datos del admin:', {
+      userRole: user?.role,
+      userId: user?.id,
+      kitchenId,
+      passwordData
+    });
+    
+    // Validaciones básicas
     if (passwordData.newPassword !== passwordData.confirmPassword) {
+      console.log('❌ Las contraseñas no coinciden');
       setError('As senhas não coincidem');
       return;
     }
     
     if (passwordData.newPassword.length < 6) {
+      console.log('❌ Contraseña muy corta');
       setError('A nova senha deve ter pelo menos 6 caracteres');
       return;
     }
     
     try {
+      console.log('🔄 Iniciando cambio de contraseña...');
       setChangingPassword(true);
       setError(null);
+      setSuccess(false);
+      setSuccessMessage('');
       
-      if (user?.role === 'admin') {
-        // Admin pode alterar senha de qualquer usuário
-        await adminChangePassword(user.id, passwordData.newPassword, user.id);
-      } else {
-        // Usuário comum altera sua própria senha
-        await changePassword(user!.id, passwordData.currentPassword, passwordData.newPassword);
-      }
+      // Admin puede cambiar contraseña de cualquier usuario
+      console.log('🔐 Admin cambiando contraseña para cocina:', kitchenId);
+      const result = await adminChangePassword(0, passwordData.newPassword, user.id, kitchenId);
       
+      console.log('✅ Resultado del cambio:', result);
+      console.log('✅ Contraseña cambiada exitosamente');
+      
+      setSuccessMessage('Senha alterada com sucesso!');
       setSuccess(true);
       setPasswordData({
         currentPassword: '',
@@ -210,21 +259,27 @@ const EditKitchenProfile = () => {
       setShowPasswordSection(false);
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao alterar senha');
+      console.error('❌ Error en cambio de contraseña:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao alterar senha';
+      console.error('❌ Mensaje de error:', errorMessage);
+      setError(errorMessage);
     } finally {
       setChangingPassword(false);
+      console.log('🔐 === FIN CAMBIO DE CONTRASEÑA ===');
     }
   };
 
   // Loading state
-  if (loading) {
+  if (isLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="pt-16 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-            <p>Carregando dados da cozinha...</p>
+            <p>
+              {isLoading ? 'Verificando autenticação...' : 'Carregando dados da cozinha...'}
+            </p>
           </div>
         </div>
       </div>
@@ -282,7 +337,7 @@ const EditKitchenProfile = () => {
             {success && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
                 <p className="text-sm text-green-600">
-                  ✅ Perfil atualizado com sucesso! Redirecionando...
+                  ✅ {successMessage || 'Perfil atualizado com sucesso!'}
                 </p>
               </div>
             )}
@@ -447,34 +502,38 @@ const EditKitchenProfile = () => {
                 </div>
               </div>
 
-              {/* Seção de Alteração de Senha */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Alterar Senha</h3>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowPasswordSection(!showPasswordSection)}
-                  >
-                    {showPasswordSection ? 'Cancelar' : 'Alterar Senha'}
-                  </Button>
-                </div>
+              {/* Seção de Alteração de Senha - APENAS PARA ADMIN */}
+              {user?.role === 'admin' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Alterar Senha</h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowPasswordSection(!showPasswordSection)}
+                    >
+                      {showPasswordSection ? 'Cancelar' : 'Alterar Senha'}
+                    </Button>
+                  </div>
                 
                 {showPasswordSection && (
                   <form onSubmit={handlePasswordChange} className="space-y-4 p-4 border rounded-lg bg-gray-50">
-                    {user?.role !== 'admin' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="currentPassword">Senha Atual</Label>
-                        <Input
-                          id="currentPassword"
-                          type="password"
-                          value={passwordData.currentPassword}
-                          onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                          placeholder="Digite sua senha atual"
-                          required
-                        />
+                    {success && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                        <p className="text-sm text-green-600">✅ {successMessage}</p>
                       </div>
                     )}
+                    {error && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-sm text-red-600">❌ {error}</p>
+                      </div>
+                    )}
+                    
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <p className="text-sm text-blue-600">
+                        <strong>Admin:</strong> Você pode alterar a senha desta cozinha sem fornecer a senha atual.
+                      </p>
+                    </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="newPassword">Nova Senha</Label>
@@ -531,7 +590,8 @@ const EditKitchenProfile = () => {
                     </div>
                   </form>
                 )}
-              </div>
+                </div>
+              )}
 
               {/* Botões de Ação */}
               <div className="flex justify-end space-x-4 pt-6 border-t">
